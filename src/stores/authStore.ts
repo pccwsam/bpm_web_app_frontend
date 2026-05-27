@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import apiClient from '../services/api';
+import { create } from "zustand";
+import apiClient from "../services/api";
 
 interface User {
   id: number;
@@ -20,7 +20,10 @@ interface AuthState {
   setUser: (user: User | null) => void;
   logout: () => void;
   setLoading: (isLoading: boolean) => void;
-  loginDemo: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginDemo: (
+    username: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
   refreshToken: () => Promise<boolean>;
   initializeFromCookie: () => void;
 }
@@ -34,9 +37,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     try {
       // Call backend to clear cookies
-      await apiClient.post('/api/auth/demo/logout');
+      await apiClient.post("/api/auth/demo/logout");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       // Clear state regardless of backend call success
       set({ user: null, isAuthenticated: false });
@@ -50,18 +53,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
    */
   initializeFromCookie: async () => {
     try {
-      const response = await apiClient.get('/api/auth/me');
+      const response = await apiClient.get("/api/auth/me");
       if (response.data) {
-        set({ 
-          user: response.data, 
+        set({
+          user: response.data,
           isAuthenticated: true,
-          isLoading: false 
+          isLoading: false,
         });
         return;
       }
     } catch (error) {
       // Not authenticated or token expired
-      console.debug('No valid session found');
+      console.debug("No valid session found");
     }
     set({ isLoading: false });
   },
@@ -69,24 +72,62 @@ export const useAuthStore = create<AuthState>((set, get) => ({
    * Login with demo credentials.
    * Backend sets httpOnly cookies, frontend only stores user info.
    */
+  // loginDemo: async (username: string, password: string) => {
+  //   try {
+  //     const response = await apiClient.post('/api/auth/demo/login', {
+  //       username: username.toLowerCase(),
+  //       password,
+  //     });
+
+  //     if (response.data.access_token) {
+  //       const { user } = response.data;
+  //       // Store user info only (token is in httpOnly cookie)
+  //       get().setUser(user as User);
+  //       return { success: true };
+  //     } else {
+  //       return { success: false, error: 'Invalid response from server' };
+  //     }
+  //   } catch (error: any) {
+  //     const errorMessage = error.response?.data?.detail || 'Login failed';
+  //     return { success: false, error: errorMessage };
+  //   }
+  // },
+  /**
+   * Login with demo credentials (Mocked completely on frontend).
+   * Bypasses the API server and resolves instantly with mock admin data.
+   */
   loginDemo: async (username: string, password: string) => {
     try {
-      const response = await apiClient.post('/api/auth/demo/login', {
-        username: username.toLowerCase(),
-        password,
-      });
+      // Simulate a small network delay for realism (Optional, remove if you want instant response)
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (response.data.access_token) {
-        const { user } = response.data;
-        // Store user info only (token is in httpOnly cookie)
+      // Hardcoded response matching your server's payload format
+      const mockResponse = {
+        access_token:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vLWFkbWluIiwiZW1haWwiOiJhZG1pbkBkZW1vLmNvbSIsIm5hbWUiOiJBZG1pbiBVc2VyIiwicm9sZXMiOlsiYWRtaW4iLCJwbGFubmVyIiwiYXBwcm92ZXIiXSwiZXhwIjoxNzc5ODc0NDk5LCJ0eXBlIjoiYWNjZXNzIn0.lpY_Kr8ex_U8QBC-rRTcUg9HQ4Hd6MiDG3TiNN7n2Fs",
+        token_type: "bearer",
+        expires_in: 900,
+        user: {
+          id: 0,
+          okta_user_id: "demo_okta_id", // Added to fulfill your strict User interface requirements
+          email: "admin@demo.com",
+          name: "Admin User",
+          roles: ["admin", "planner", "approver"],
+          is_active: true,
+          created_at: new Date().toISOString(),
+        },
+      };
+
+      if (mockResponse.access_token) {
+        const { user } = mockResponse;
+        // Store user info in Zustand state
         get().setUser(user as User);
         return { success: true };
       } else {
-        return { success: false, error: 'Invalid response from server' };
+        return { success: false, error: "Invalid mock data configuration" };
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Login failed';
-      return { success: false, error: errorMessage };
+      return { success: false, error: "Login failed" };
     }
   },
   /**
@@ -95,14 +136,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
    */
   refreshToken: async () => {
     try {
-      const response = await apiClient.post('/api/auth/demo/refresh');
+      const response = await apiClient.post("/api/auth/demo/refresh");
       if (response.data.access_token) {
-        console.debug('Token refreshed successfully');
+        console.debug("Token refreshed successfully");
         return true;
       }
       return false;
     } catch (error: any) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       // If refresh fails, user needs to re-login
       get().logout();
       return false;

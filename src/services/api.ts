@@ -1,18 +1,21 @@
-import axios from 'axios';
-import { useAuthStore } from '@/stores/authStore';
+import axios from "axios";
+import { useAuthStore } from "@/stores/authStore";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-const AWS_API_URL = import.meta.env.VITE_AWS_API_URL || 'https://osuunaqrhe.execute-api.ap-east-1.amazonaws.com/dev';
+// const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const AWS_API_URL =
+  import.meta.env.VITE_AWS_API_URL ||
+  "https://osuunaqrhe.execute-api.ap-east-1.amazonaws.com/dev";
 
 // Endpoints that should be routed directly to AWS Serverless
 const migratedEndpoints = [
-  '/api/health',
-  '/api/jobs',
-  '/api/auth',
-  '/api/master-data',
-  '/api/validation',
-  '/api/commission',
-  '/api/upload'
+  "/api/health",
+  "/api/jobs",
+  // '/api/auth',
+  "/api/master-data",
+  "/api/validation",
+  "/api/commission",
+  "/api/upload",
 ];
 
 export const apiClient = axios.create({
@@ -25,7 +28,9 @@ apiClient.interceptors.request.use(
   (config) => {
     // Dynamically route to AWS for migrated endpoints
     if (config.url) {
-      const isMigrated = migratedEndpoints.some(endpoint => config.url?.startsWith(endpoint));
+      const isMigrated = migratedEndpoints.some((endpoint) =>
+        config.url?.startsWith(endpoint)
+      );
       if (isMigrated) {
         config.baseURL = AWS_API_URL;
       } else {
@@ -66,11 +71,11 @@ apiClient.interceptors.response.use(
         }
       } catch (refreshError) {
         // Refresh failed - user needs to re-login
-        console.error('Token refresh failed, redirecting to login');
+        console.error("Token refresh failed, redirecting to login");
         useAuthStore.getState().logout();
         // Only redirect if not already on login page
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
         }
         return Promise.reject(refreshError);
       }
@@ -79,9 +84,9 @@ apiClient.interceptors.response.use(
     // For other 401 errors (or if refresh failed)
     if (error.response?.status === 401) {
       // Only logout and redirect if not on login page
-      if (window.location.pathname !== '/login') {
+      if (window.location.pathname !== "/login") {
         useAuthStore.getState().logout();
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     }
 
