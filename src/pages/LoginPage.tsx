@@ -1,35 +1,76 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LogIn, User, Lock, Info } from 'lucide-react';
+// import { useState } from 'react';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+// import { LogIn, User, Lock, Info } from 'lucide-react';
+import { LogIn, User, Lock, Info, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { loginDemo } = useAuthStore();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // const [username, setUsername] = useState('');
+  // const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("admin");
+  const [error, setError] = useState("");
+  // const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Auto-login on component mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const triggerAutoLogin = async () => {
+      try {
+        const result = await loginDemo("admin", "admin");
+        if (!isMounted) return;
+
+        if (result.success) {
+          navigate("/");
+        } else {
+          setError(result.error || "Auto login failed");
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError("An unexpected error occurred during auto login");
+          setIsLoading(false);
+        }
+      }
+    };
+
+    triggerAutoLogin();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [loginDemo, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const result = await loginDemo(username.toLowerCase(), password);
       if (result.success) {
-        navigate('/');
+        navigate("/");
       } else {
-        setError(result.error || 'Login failed');
+        setError(result.error || "Login failed");
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -37,12 +78,12 @@ export default function LoginPage() {
 
   const quickLogin = async (role: string) => {
     setIsLoading(true);
-    setError('');
+    setError("");
     const result = await loginDemo(role, role);
     if (result.success) {
-      navigate('/');
+      navigate("/");
     } else {
-      setError(result.error || 'Login failed');
+      setError(result.error || "Login failed");
     }
     setIsLoading(false);
   };
@@ -53,7 +94,9 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 text-white flex-col justify-center p-12">
         <div className="max-w-md space-y-8">
           <div>
-            <h1 className="text-4xl font-bold mb-4">Commission Management System</h1>
+            <h1 className="text-4xl font-bold mb-4">
+              Commission Management System
+            </h1>
             <p className="text-slate-300 text-lg">
               Demo Mode - Local Authentication
             </p>
@@ -65,16 +108,42 @@ export default function LoginPage() {
               <p className="font-bold mb-2">Demo Credentials:</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Username: <code className="bg-blue-800 px-2 py-1 rounded">admin</code></span>
-                  <span>Password: <code className="bg-blue-800 px-2 py-1 rounded">admin</code></span>
+                  <span>
+                    Username:{" "}
+                    <code className="bg-blue-800 px-2 py-1 rounded">admin</code>
+                  </span>
+                  <span>
+                    Password:{" "}
+                    <code className="bg-blue-800 px-2 py-1 rounded">admin</code>
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Username: <code className="bg-blue-800 px-2 py-1 rounded">planner</code></span>
-                  <span>Password: <code className="bg-blue-800 px-2 py-1 rounded">planner</code></span>
+                  <span>
+                    Username:{" "}
+                    <code className="bg-blue-800 px-2 py-1 rounded">
+                      planner
+                    </code>
+                  </span>
+                  <span>
+                    Password:{" "}
+                    <code className="bg-blue-800 px-2 py-1 rounded">
+                      planner
+                    </code>
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Username: <code className="bg-blue-800 px-2 py-1 rounded">approver</code></span>
-                  <span>Password: <code className="bg-blue-800 px-2 py-1 rounded">approver</code></span>
+                  <span>
+                    Username:{" "}
+                    <code className="bg-blue-800 px-2 py-1 rounded">
+                      approver
+                    </code>
+                  </span>
+                  <span>
+                    Password:{" "}
+                    <code className="bg-blue-800 px-2 py-1 rounded">
+                      approver
+                    </code>
+                  </span>
                 </div>
               </div>
             </AlertDescription>
@@ -124,12 +193,27 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            {/* <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
               <LogIn className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl">Demo Login</CardTitle>
             <CardDescription>
               Enter username and password (must match) to access the system
+            </CardDescription> */}
+            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+              {isLoading ? (
+                <Loader2 className="w-8 h-8 text-white animate-spin" />
+              ) : (
+                <LogIn className="w-8 h-8 text-white" />
+              )}
+            </div>
+            <CardTitle className="text-2xl">
+              {isLoading ? "Authenticating..." : "Demo Login"}
+            </CardTitle>
+            <CardDescription>
+              {isLoading
+                ? "Please wait while we log you in automatically."
+                : "Enter username and password to access the system"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -144,6 +228,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -157,6 +242,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -173,7 +259,7 @@ export default function LoginPage() {
                 className="w-full h-12 text-base"
                 disabled={isLoading || !username || !password}
               >
-                {isLoading ? 'Logging in...' : 'Sign In'}
+                {isLoading ? "Logging in..." : "Sign In"}
               </Button>
             </form>
 
@@ -182,14 +268,17 @@ export default function LoginPage() {
                 <div className="w-full border-t border-slate-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500">Quick Login</span>
+                {/* <span className="bg-white px-2 text-slate-500">Quick Login</span> */}
+                <span className="bg-white px-2 text-slate-500">
+                  Quick Login Switcher
+                </span>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               <Button
                 variant="outline"
-                onClick={() => quickLogin('admin')}
+                onClick={() => quickLogin("admin")}
                 disabled={isLoading}
                 className="text-xs"
               >
@@ -197,7 +286,7 @@ export default function LoginPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => quickLogin('planner')}
+                onClick={() => quickLogin("planner")}
                 disabled={isLoading}
                 className="text-xs"
               >
@@ -205,7 +294,7 @@ export default function LoginPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => quickLogin('approver')}
+                onClick={() => quickLogin("approver")}
                 disabled={isLoading}
                 className="text-xs"
               >
@@ -215,7 +304,9 @@ export default function LoginPage() {
 
             <div className="mt-4 p-3 bg-slate-100 rounded-lg">
               <p className="text-xs text-slate-600 text-center">
-                <strong>Note:</strong> This is demo mode. Okta authentication is disabled for testing.
+                {/* <strong>Note:</strong> This is demo mode. Okta authentication is disabled for testing. */}
+                <strong>Auto-Login Active:</strong> Bypassing authentication
+                form for local fast-track development.
               </p>
             </div>
           </CardContent>
